@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatbot</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f4f4f4;
+      }
+
+      .chat-container {
+        width: 400px;
+        height: 500px;
+        background-color: white;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .chat-box {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .chat-box .message {
+        margin-bottom: 10px;
+      }
+
+      .chat-box .message.bot {
+        text-align: left;
+        color: #333;
+      }
+
+      .chat-box .message.user {
+        text-align: right;
+        color: #007bff;
+      }
+
+      .input-box {
+        padding: 10px;
+        display: flex;
+      }
+
+      .input-box input[type="text"] {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+      }
+
+      .input-box button {
+        margin-left: 10px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        border: none;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+
+      .input-box button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat-container">
+      <div class="chat-box" id="chat-box">
+        <!-- Messages will appear here -->
+      </div>
+      <div class="input-box">
+        <input type="text" id="user-input" placeholder="Nhập tin nhắn..." />
+        <button onclick="sendMessage()">Gửi</button>
+      </div>
+    </div>
+
+    <script>
+      function sendMessage() {
+        const userInput = document.getElementById("user-input").value;
+        if (userInput.trim() === "") return;
+
+        // Hiển thị tin nhắn của người dùng
+        displayMessage(userInput, "user");
+
+        // Gửi tin nhắn đến server
+        fetch("http://localhost:3000/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: userInput }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            displayMessage(data.reply, "bot");
+          })
+          .catch((error) => {
+            console.error(
+              "There was a problem with the fetch operation:",
+              error
+            );
+            displayMessage("Có lỗi xảy ra. Vui lòng thử lại.", "bot");
+          });
+
+        // Xóa nội dung trong ô nhập liệu
+        document.getElementById("user-input").value = "";
+      }
+
+      function displayMessage(message, sender) {
+        const chatBox = document.getElementById("chat-box");
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message", sender);
+        messageElement.textContent = message;
+        chatBox.appendChild(messageElement);
+
+        // Tự động cuộn xuống cuối chat box
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+    </script>
+  </body>
+</html>
